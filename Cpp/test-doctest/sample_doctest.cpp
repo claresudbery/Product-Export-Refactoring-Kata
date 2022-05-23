@@ -27,7 +27,6 @@ TEST_CASE("XMLExporter") {
     storeProducts.push_back(EyelashCurler);
     storeProducts.push_back(WildRose);
     storeProducts.push_back(CocoaButter);
-
     Store* FlagshipStore = new Store("Nordstan", "4189", storeProducts);
     /* Store events add themselves to the stocked items at their store */
     Product* Masterclass = new StoreEvent("Eyeshadow Masterclass", "EVENT01",
@@ -35,14 +34,41 @@ TEST_CASE("XMLExporter") {
     Product* Makeover = new StoreEvent("Makeover", "EVENT02",
                                        FlagshipStore, new Price(149.99, "USD"));
 
+    SUBCASE("export store") {
+        auto xml = XMLExporter().export_store(FlagshipStore);
+        verifyXml(xml);
+    }
+
     std::vector<Product *> orderProducts;
     orderProducts.push_back(Makeover);
+    orderProducts.push_back(EyelashCurler);
     Order* RecentOrder = new Order("1234", from_iso_date("2018-09-01T00:00Z"),
                                    FlagshipStore, orderProducts);
 
+    std::vector<Product *> oldOrderProducts;
+    oldOrderProducts.push_back(CherryBloom);
+    oldOrderProducts.push_back(Masterclass);
+    Order* OldOrder = new Order("1235", from_iso_date("2017-09-01T00:00Z"),
+                                FlagshipStore, oldOrderProducts);
 
-    SUBCASE("export store") {
-        // TODO: write this test case
+    auto orders = std::vector<Order *>();
+    orders.push_back(RecentOrder);
+    orders.push_back(OldOrder);
+
+    SUBCASE("export full") {
+        auto xml = XMLExporter().export_full(orders);
+        verifyXml(xml);
+    }
+    SUBCASE("export tax details") {
+        auto xml = XMLExporter().export_tax_details(orders);
+        verifyXml(xml);
+    }
+    SUBCASE("export history") {
+        auto xml = XMLExporter().export_history(orders);
+        auto options = ApprovalTests::Options().withScrubber(
+                ApprovalTests::Scrubbers::createRegexScrubber("createdAt='[^']+'", "createdAt='date'")
+        );
+        verifyXml(xml, options);
     }
 }
 

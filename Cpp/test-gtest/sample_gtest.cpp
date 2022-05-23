@@ -31,6 +31,7 @@ protected:
     Product *Masterclass;
     Product *Makeover;
     Order *RecentOrder;
+    Order *OldOrder;
 
     void SetUp() override {
         CherryBloom = new Product("Cherry Bloom", "LIPSTICK01", 30, new Price(14.99, "USD"));
@@ -57,10 +58,21 @@ protected:
 
         orderProducts = std::vector<Product *>();
         orderProducts.push_back(Makeover);
+        orderProducts.push_back(EyelashCurler);
+
+        oldOrderProducts = std::vector<Product *>();
+        oldOrderProducts.push_back(CherryBloom);
+        oldOrderProducts.push_back(Masterclass);
 
         RecentOrder = new Order("1234", from_iso_date("2018-09-01T00:00Z"),
                                 FlagshipStore, orderProducts);
 
+        OldOrder = new Order("1235", from_iso_date("2017-09-01T00:00Z"),
+                             FlagshipStore, oldOrderProducts);
+
+        orders = std::vector<Order *>();
+        orders.push_back(RecentOrder);
+        orders.push_back(OldOrder);
 
     }
 
@@ -68,6 +80,27 @@ protected:
 };
 
 TEST_F(ProductExportTest, exportStore) {
-    // TODO: write this test case
+    auto xml = XMLExporter().export_store(FlagshipStore);
+    verifyXml(xml);
 }
 
+
+TEST_F(ProductExportTest, exportFull) {
+    auto xml = XMLExporter().export_full(orders);
+    verifyXml(xml);
+}
+
+TEST_F(ProductExportTest, exportTaxDetails) {
+    auto xml = XMLExporter().export_tax_details(orders);
+    verifyXml(xml);
+}
+
+TEST_F(ProductExportTest, exportHistory) {
+    auto xml = XMLExporter().export_history(orders);
+    auto options = ApprovalTests::Options().withScrubber(
+            ApprovalTests::Scrubbers::createRegexScrubber(
+                    "createdAt='[^']+'", "createdAt='date'")
+    );
+    verifyXml(xml, options
+    );
+}

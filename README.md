@@ -3,6 +3,11 @@ Product XML Refactoring Kata
 
 For practising approval testing and refactoring duplication.
 
+This branch
+------------
+
+I created this branch to experiment with how the ApprovalTests library works in .Net
+
 Instructions
 ------------
 
